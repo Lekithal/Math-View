@@ -9,10 +9,10 @@ class Expression {
                     case "Operation":
                         return new Operation(element.type);
                     
-                    case "Decimal":
+                    case "SimpleFraction":
                         return new SimpleFraction(element.numerator, element.denominator);
                     
-                    case "Fraction":
+                    case "ComplexFraction":
                         return new ComplexFraction(element.numerator, element.denominator);
                     
                     case "Expression":

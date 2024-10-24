@@ -10,20 +10,25 @@ output = (input) => { document.getElementById("output").value = input; }
 
 
 function solve(expression) {
+    let result = "";
+    let log = (t1 = "", t2 = "") => {
+        result += t1 + " " + t2 + "\n";
+    }
 
     let copy = expression.copy();
 
-    console.log("Problem:", copy.toString());
-    console.log("Solution:");
-    console.log("0:", copy.toString());
+    log("Problem:", copy.toString());
+    log();
+    log("Solution:");
+    log("0:", copy.toString());
 
     let steps = 1;
     while (copy.next().length !== 0) {
-        console.log(`${steps}:`, copy.step());
+        log(`${steps}:`, copy.step());
         steps++;
     }
 
-    return "Success";
+    return result;
 }
 
 
@@ -103,7 +108,7 @@ KEYBOARD = {
                     break;
                 
                 case 18: //Solve
-    
+                    document.getElementById("console").value = solve(KEYBOARD.equation[0]);
                     break;
                 
                 case 19: //Delete
