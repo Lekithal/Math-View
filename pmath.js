@@ -221,7 +221,7 @@ class SimpleFraction {
             return this;
         } 
 
-        let result = new SimpleFraction(this.numerator / gcd, this.denominator = gcd);
+        let result = new SimpleFraction(this.numerator / gcd, this.denominator / gcd);
         return result;
     }
 }
@@ -240,7 +240,7 @@ class ComplexFraction {
 const PMath = {
     gcd(a, b) {
         if (a <= 0 || b <= 0) {
-            return null;
+            return 1;
         }
         while (b !== 0) {
             let temp = b;

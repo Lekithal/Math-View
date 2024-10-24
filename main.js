@@ -1,8 +1,7 @@
 /*
 To Do:
- - Keyboard Support
- - Floating Point Precision Error
  - ComplexFraction's
+ - Delete Key
  - Design and stuff
 */
 
@@ -37,7 +36,8 @@ KEYS = Array.from(document.getElementById("keyboard").children);
 KEYBOARD = {
     "equation": [new Expression(), new Expression()],
     "cursor": [0, 0, 0],
-    "encoding": "0123456789()*/+-=".split("").concat(["FRACTION", "SOLVE", "DELETE", "CLEAR"]),
+    "encoding": "0123456789()^*/+-=".split("").concat(["FRACTION", "SOLVE", "DELETE", "CLEAR"]),
+    "move": () => {},
     "press": (event) => {
         let key = event.srcElement.dataset.value;
         let type = KEYBOARD.encoding.findIndex((element) => element === key);
@@ -55,7 +55,7 @@ KEYBOARD = {
         let cursor = expression.value[location[depth]];
 
         if (type == -1) {
-            console.Error(`"${key}" is not a valid key.`);
+            console.error(`"${key}" is not a valid key.`);
         }
 
         else if (type <= 9) { //SimpleFraction
@@ -85,10 +85,36 @@ KEYBOARD = {
         }
 
         else if (type <= 11) { //Expression
+            if (type === 10) {
+                if (cursor == undefined) {
+                    expression.push(new Expression());
+                    KEYBOARD.cursor.push(0);
+                }
+    
+                else if (cursor instanceof SimpleFraction) {
+                    
+                }
+    
+                else if (cursor instanceof Operation) {
+                    expression.push(new Expression());
+                    KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
+                    KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 0;
+                    KEYBOARD.cursor.push(0);
+                }
+            }
 
+            else if (type === 11) {
+                KEYBOARD.cursor.pop();
+                KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
+                KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 0;
+            }
+
+            else {
+                console.error("What the fuck");
+            }
         }
 
-        else if (type <= 15) { //Operation
+        else if (type <= 16) { //Operation
             
             if (cursor === undefined || cursor instanceof SimpleFraction) {
                 expression.push(new Operation(key));
@@ -97,30 +123,30 @@ KEYBOARD = {
             }
 
             else {
-                console.Error("Unknown element on cursor.");
+                console.error("Unknown element on cursor.");
             }
         }
 
         else {
             switch (type) {
-                case 17: //ComplexFraction
+                case 18: //ComplexFraction
     
                     break;
                 
-                case 18: //Solve
+                case 19: //Solve
                     document.getElementById("console").value = solve(KEYBOARD.equation[0]);
                     break;
                 
-                case 19: //Delete
+                case 20: //Delete
     
                     break;
                 
-                case 20: //Clear
-                    KEYBOARD.equation.forEach((e) => {e.value = []})
+                case 21: //Clear
+                    KEYBOARD.equation.forEach((e) => { e.value = [] });
                     break;
             
                 default:
-                    console.Error("bruh")
+                    console.error("bruh")
                     break;
             }
         }
@@ -130,3 +156,12 @@ KEYBOARD = {
 }
 
 KEYS.forEach(button => button.addEventListener("click", KEYBOARD.press));
+
+
+addEventListener("keyup", event => {
+    let button = KEYS.filter(element => element.dataset.keycode === event.key);
+    button.forEach(button => {
+        button.click();
+        console.log(button.dataset.value);
+    });
+})
