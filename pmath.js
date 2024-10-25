@@ -29,8 +29,24 @@ class Expression {
         }
     }
     
-    push(...element) {
-        element.forEach(element => this.value.push(element));
+    add(element, location = []) {
+        this.value.push(element);
+    }
+
+    get(location) {
+        let depth = location.length - 1;
+        let parent = this;
+
+        if (depth === -1) {
+            return this.toString();
+        }
+
+        //get to the "lowest" parenthesis
+        for (let i = 0; i < depth; i++) {
+            parent = parent.value[location[i]];
+        }
+
+        return [parent.value[location[depth]], parent, depth];
     }
     
     copy() { return new Expression(this.json()); }
@@ -75,19 +91,12 @@ class Expression {
 
     step() {
         let location = this.next();
-        let depth = location.length - 1;
-        let parent = this;
-
-        if (depth === -1) {
+        
+        if (location.length === 0) {
             return this.toString();
         }
 
-        //get to the "lowest" parenthesis
-        for (let i = 0; i < depth; i++) {
-            parent = parent.value[location[i]];
-        }
-
-        let operation = parent.value[location[depth]];
+        let [operation, parent, depth] = this.get(location);
 
         //Null Operation
         if (operation.name === "Expression") {
@@ -190,8 +199,8 @@ class SimpleFraction {
         let x = this.simplify(false);
         let y = fraction.simplify(false);
 
-        let numerator = this.numerator * fraction.denominator;
-        let denominator = this.denominator * fraction.numerator;
+        let numerator = x.numerator * y.denominator;
+        let denominator = x.denominator * y.numerator;
 
         return new SimpleFraction(numerator, denominator).simplify();
     }
@@ -200,8 +209,8 @@ class SimpleFraction {
         let x = this.simplify(false);
         let y = fraction.simplify(false);
 
-        let numerator = (x.numerator ** y.numerator / y.denominator);
-        let denominator = (x.denominator ** y.numerator / y.denominator);
+        let numerator = x.numerator ** (y.numerator / y.denominator);
+        let denominator = x.denominator ** (y.numerator / y.denominator);
 
         return new SimpleFraction(numerator, denominator).simplify();
     }

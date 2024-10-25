@@ -35,14 +35,43 @@ KEYS = Array.from(document.getElementById("keyboard").children);
 
 KEYBOARD = {
     "equation": [new Expression(), new Expression()],
-    "cursor": [0, 0, 0],
-    "encoding": "0123456789()^*/+-=".split("").concat(["FRACTION", "SOLVE", "DELETE", "CLEAR"]),
-    "move": () => {},
-    "press": (event) => {
-        let key = event.srcElement.dataset.value;
-        let type = KEYBOARD.encoding.findIndex((element) => element === key);
+    "cursor": [0, -1, 1],
+    "encoding": "0123456789()^*/+-=".split("").concat(["FRACTION", "SOLVE", "DELETE", "CLEAR", "LEFT", "RIGHT"]),
+    "move": (direction) => {
 
-        let expression = KEYBOARD.equation[KEYBOARD.cursor[0]]
+        let end = KEYBOARD.cursor.length - 1;
+        KEYBOARD.cursor[end] += direction;
+        
+        if (KEYBOARD.cursor[end] === 0) {
+            KEYBOARD.cursor[end] = 1;
+            KEYBOARD.cursor[end - 1] -= 1;
+        }
+        
+        let expression = KEYBOARD.equation[KEYBOARD.cursor[0]];
+        
+        if (KEYBOARD.cursor[end] > expression.get(KEYBOARD.cursor.slice(1))) {
+            
+        }
+
+        if (KEYBOARD.cursor[end - 1] < -1) {
+            KEYBOARD.cursor[end - 1] = -1;
+        }
+    },
+    "press": (event) => {
+        let key, type;
+
+        if (typeof event === "number") {
+            type = event;
+            key = KEYBOARD.encoding[type];
+        }
+
+        else {
+            key = event.srcElement.dataset.value;
+            type = KEYBOARD.encoding.findIndex((element) => element === key);
+        }
+
+        
+        let expression = KEYBOARD.equation[KEYBOARD.cursor[0]];
         
 
         let location = KEYBOARD.cursor.slice(1);
@@ -61,9 +90,10 @@ KEYBOARD = {
         else if (type <= 9) { //SimpleFraction
 
             //First element in that expression
-            if (cursor === undefined) {
-                expression.push(new SimpleFraction(key));
-                KEYBOARD.cursor[KEYBOARD.cursor.length - 1] += 1;
+            if (cursor === undefined || cursor instanceof Operation) {
+                expression.add(new SimpleFraction(key));
+                KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
+                KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 1;
             }
             
             //Is a SimpleFraction
@@ -76,10 +106,9 @@ KEYBOARD = {
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] += 1;
             }
 
-            else if (cursor instanceof Operation) {
-                expression.push(new SimpleFraction(key));
-                KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
-                KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 1;
+            else if (cursor instanceof Expression) {
+                KEYBOARD.press(13);
+                KEYBOARD.press(Number(type));
             }
 
         }
@@ -87,16 +116,19 @@ KEYBOARD = {
         else if (type <= 11) { //Expression
             if (type === 10) {
                 if (cursor == undefined) {
-                    expression.push(new Expression());
+                    expression.add(new Expression());
+                    KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
+                    KEYBOARD.cursor[KEYBOARD.cursor.length - 1] += -1;
                     KEYBOARD.cursor.push(0);
                 }
     
                 else if (cursor instanceof SimpleFraction) {
-                    
+                    KEYBOARD.press(13);
+                    KEYBOARD.press(10);
                 }
     
                 else if (cursor instanceof Operation) {
-                    expression.push(new Expression());
+                    expression.add(new Expression());
                     KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
                     KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 0;
                     KEYBOARD.cursor.push(0);
@@ -105,21 +137,25 @@ KEYBOARD = {
 
             else if (type === 11) {
                 KEYBOARD.cursor.pop();
-                KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
+                //KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 0;
             }
 
             else {
-                console.error("What the fuck");
+                console.error("Massive Error");
             }
         }
 
         else if (type <= 16) { //Operation
             
-            if (cursor === undefined || cursor instanceof SimpleFraction) {
-                expression.push(new Operation(key));
+            if (cursor === undefined || cursor instanceof SimpleFraction || cursor instanceof Expression) {
+                expression.add(new Operation(key));
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 1;
+            }
+
+            else if (cursor instanceof Operation) {
+                console.error("Cursor on Cursor has not been implemented (yet)")
             }
 
             else {
@@ -138,15 +174,22 @@ KEYBOARD = {
                     break;
                 
                 case 20: //Delete
-    
+
                     break;
                 
                 case 21: //Clear
                     KEYBOARD.equation.forEach((e) => { e.value = [] });
+                    KEYBOARD.cursor = [0, 0, 0];
                     break;
-            
+                
+                case 22: //move left
+                case 23: //move right
+                    let direction = (type - 22) * 2 - 1
+                    KEYBOARD.move(direction);
+                    break;
+
                 default:
-                    console.error("bruh")
+                    console.error("Massive Error")
                     break;
             }
         }
@@ -160,8 +203,10 @@ KEYS.forEach(button => button.addEventListener("click", KEYBOARD.press));
 
 addEventListener("keyup", event => {
     let button = KEYS.filter(element => element.dataset.keycode === event.key);
-    button.forEach(button => {
-        button.click();
-        console.log(button.dataset.value);
-    });
+    button.forEach(button => button.click());
 })
+
+_cursor = document.getElementById("cursor");
+setInterval(() => {
+    _cursor.value = String(KEYBOARD.cursor)
+}, 100)
