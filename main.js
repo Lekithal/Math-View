@@ -98,11 +98,9 @@ KEYBOARD = {
             
             //Is a SimpleFraction
             else if (cursor instanceof SimpleFraction) {
-                let value = cursor.toString().split("")
-                value.splice([location[depth + 1]], 0, key)
-                value = value.join("")
-
-                expression.value[location[depth]] = new SimpleFraction(value);
+                let value = cursor.toString();
+                let newValue = value.slice(0, location[depth + 1]) + key + value.slice(location[depth + 1]);
+                expression.value[location[depth]] = new SimpleFraction(newValue);
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] += 1;
             }
 
