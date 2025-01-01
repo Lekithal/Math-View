@@ -1,3 +1,23 @@
+const PMath = {
+    gcd(a, b) {
+        if (a <= 0 || b <= 0) {
+            return 1;
+        }
+        while (b !== 0) {
+            let temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    },
+    lcm(a, b) {
+        if (a <= 0 || b <= 0) {
+            return null;
+        }
+        return (a * b) / PMath.gcd(a, b);
+    }
+}
+
 class Expression {
     constructor(json = null) {
         this.name = "Expression"
@@ -169,20 +189,20 @@ class SimpleFraction {
         let x = this.simplify(false);
         let y = fraction.simplify(false);
 
-        let numerator = x.numerator * y.denominator + y.numerator * x.denominator;
-        let denominator = x.denominator * y.denominator;
+        let denominator = PMath.lcm(x.denominator, y.denominator);
+        let numerator = x.numerator * (denominator / x.denominator) + y.numerator * (denominator / y.denominator);
 
-        return new SimpleFraction(numerator, denominator).simplify();
+        return new SimpleFraction(numerator, denominator);
     }
 
     sub(fraction) {
         let x = this.simplify(false);
         let y = fraction.simplify(false);
 
-        let numerator = x.numerator * y.denominator - y.numerator * x.denominator;
-        let denominator = x.denominator * y.denominator;
+        let denominator = PMath.lcm(x.denominator, y.denominator);
+        let numerator = x.numerator * (denominator / x.denominator) - y.numerator * (denominator / y.denominator);
 
-        return new SimpleFraction(numerator, denominator).simplify();
+        return new SimpleFraction(numerator, denominator);
     }
 
     mul(fraction) {
@@ -228,7 +248,7 @@ class SimpleFraction {
             this.numerator /= gcd;
             this.denominator /= gcd;
             return this;
-        } 
+        }
 
         let result = new SimpleFraction(this.numerator / gcd, this.denominator / gcd);
         return result;
@@ -243,25 +263,4 @@ class ComplexFraction {
     }
 
     toString() { return `(${this.numerator} / ${this.denominator})`; }
-}
-
-
-const PMath = {
-    gcd(a, b) {
-        if (a <= 0 || b <= 0) {
-            return 1;
-        }
-        while (b !== 0) {
-            let temp = b;
-            b = a % b;
-            a = temp;
-        }
-        return a;
-    },
-    lcm(a, b) {
-        if (a <= 0 || b <= 0) {
-            return null;
-        }
-        return (a * b) / PMath.gcd(a, b);
-    }
 }

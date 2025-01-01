@@ -5,8 +5,11 @@ To Do:
  - Design and stuff
 */
 
-output = (input) => { document.getElementById("output").value = input; }
+document.querySelectorAll('button').forEach(button => {
+    button.setAttribute('tabindex', '-1');
+});
 
+output = (input) => { document.getElementById("output").value = input; }
 
 function solve(expression) {
     let result = "";
@@ -33,30 +36,11 @@ function solve(expression) {
 
 KEYS = Array.from(document.getElementById("keyboard").children);
 
+EQUATION = [new Expression(), new Expression()]
+
 KEYBOARD = {
-    "equation": [new Expression(), new Expression()],
-    "cursor": [0, -1, 1],
+    "cursor": [0, 0, 0],
     "encoding": "0123456789()^*/+-=".split("").concat(["FRACTION", "SOLVE", "DELETE", "CLEAR", "LEFT", "RIGHT"]),
-    "move": (direction) => {
-
-        let end = KEYBOARD.cursor.length - 1;
-        KEYBOARD.cursor[end] += direction;
-        
-        if (KEYBOARD.cursor[end] === 0) {
-            KEYBOARD.cursor[end] = 1;
-            KEYBOARD.cursor[end - 1] -= 1;
-        }
-        
-        let expression = KEYBOARD.equation[KEYBOARD.cursor[0]];
-        
-        if (KEYBOARD.cursor[end] > expression.get(KEYBOARD.cursor.slice(1))) {
-            
-        }
-
-        if (KEYBOARD.cursor[end - 1] < -1) {
-            KEYBOARD.cursor[end - 1] = -1;
-        }
-    },
     "press": (event) => {
         let key, type;
 
@@ -69,9 +53,8 @@ KEYBOARD = {
             key = event.srcElement.dataset.value;
             type = KEYBOARD.encoding.findIndex((element) => element === key);
         }
-
         
-        let expression = KEYBOARD.equation[KEYBOARD.cursor[0]];
+        let expression = EQUATION[KEYBOARD.cursor[0]];
         
 
         let location = KEYBOARD.cursor.slice(1);
@@ -87,16 +70,18 @@ KEYBOARD = {
             console.error(`"${key}" is not a valid key.`);
         }
 
-        else if (type <= 9) { //SimpleFraction
+        else if (type <= 9) { //SimpleFraction press
 
-            //First element in that expression
+            //Operation or Undefined
             if (cursor === undefined || cursor instanceof Operation) {
                 expression.add(new SimpleFraction(key));
-                KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 1;
+                
+                cursor === undefined ? null :
+                KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1; //Operation only
             }
             
-            //Is a SimpleFraction
+            //SimpleFraction
             else if (cursor instanceof SimpleFraction) {
                 let value = cursor.toString();
                 let newValue = value.slice(0, location[depth + 1]) + key + value.slice(location[depth + 1]);
@@ -104,6 +89,7 @@ KEYBOARD = {
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] += 1;
             }
 
+            //Expression
             else if (cursor instanceof Expression) {
                 KEYBOARD.press(13);
                 KEYBOARD.press(Number(type));
@@ -111,20 +97,18 @@ KEYBOARD = {
 
         }
 
-        else if (type <= 11) { //Expression
+        else if (type <= 11) { //Expression press
             if (type === 10) {
                 if (cursor == undefined) {
                     expression.add(new Expression());
-                    KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
-                    KEYBOARD.cursor[KEYBOARD.cursor.length - 1] += -1;
                     KEYBOARD.cursor.push(0);
                 }
-    
+
                 else if (cursor instanceof SimpleFraction) {
-                    KEYBOARD.press(13);
-                    KEYBOARD.press(10);
+                    KEYBOARD.press(13); // press Operation [Multiplication]
+                    KEYBOARD.press(10); // press Expression [Open Parenthesis]
                 }
-    
+
                 else if (cursor instanceof Operation) {
                     expression.add(new Expression());
                     KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
@@ -133,22 +117,17 @@ KEYBOARD = {
                 }
             }
 
-            else if (type === 11) {
+            else if (type === 11 && KEYBOARD.cursor.length > 3) {
                 KEYBOARD.cursor.pop();
-                //KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 0;
-            }
-
-            else {
-                console.error("Massive Error");
             }
         }
 
         else if (type <= 16) { //Operation
             
-            if (cursor === undefined || cursor instanceof SimpleFraction || cursor instanceof Expression) {
+            if ((cursor === undefined && [15, 16].includes(type)) || cursor instanceof SimpleFraction || cursor instanceof Expression) {
                 expression.add(new Operation(key));
-                KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
+                cursor === undefined ? null : KEYBOARD.cursor[KEYBOARD.cursor.length - 2] += 1;
                 KEYBOARD.cursor[KEYBOARD.cursor.length - 1] = 1;
             }
 
@@ -164,11 +143,11 @@ KEYBOARD = {
         else {
             switch (type) {
                 case 18: //ComplexFraction
-    
+
                     break;
-                
+
                 case 19: //Solve
-                    document.getElementById("console").value = solve(KEYBOARD.equation[0]);
+                    document.getElementById("console").value = solve(EQUATION[0]);
                     break;
                 
                 case 20: //Delete
@@ -176,12 +155,11 @@ KEYBOARD = {
                     break;
                 
                 case 21: //Clear
-                    KEYBOARD.equation.forEach((e) => { e.value = [] });
+                    EQUATION.forEach((e) => { e.value = [] });
                     KEYBOARD.cursor = [0, 0, 0];
                     break;
                 
-                case 22: //move left
-                case 23: //move right
+                case 22, 23: //move left/right
                     let direction = (type - 22) * 2 - 1
                     KEYBOARD.move(direction);
                     break;
@@ -192,7 +170,7 @@ KEYBOARD = {
             }
         }
 
-        output(KEYBOARD.equation[0].toString());
+        output(EQUATION[0].toString());
     }
 }
 
