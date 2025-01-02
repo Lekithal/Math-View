@@ -159,9 +159,10 @@ KEYBOARD = {
                     KEYBOARD.cursor = [0, 0, 0];
                     break;
                 
-                case 22, 23: //move left/right
-                    let direction = (type - 22) * 2 - 1
-                    KEYBOARD.move(direction);
+                case 22: //move left
+                    break;
+                
+                case 23: //move right
                     break;
 
                 default:
